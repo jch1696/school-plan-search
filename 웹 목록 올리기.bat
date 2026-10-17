@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 title Upload list for phone
-echo 폰에서 모은 목록을 받아 PC와 합치고, 다시 GitHub에 올립니다.
+echo 웹에서 모은 목록을 받아 PC와 합치고, 다시 GitHub에 올립니다.
 echo.
 git pull --rebase
 if errorlevel 1 goto fail
@@ -15,7 +15,7 @@ if errorlevel 1 (
   git push
   if errorlevel 1 goto fail
   echo.
-  echo 올렸습니다. 1~2분 뒤 폰에서 새로고침하면 반영됩니다.
+  echo 올렸습니다. 1~2분 뒤 웹에서 새로고침하면 반영됩니다.
 )
 pause
 exit /b 0

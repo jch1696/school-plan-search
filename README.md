@@ -14,18 +14,22 @@
 | `server.py` | 로컬 서버(FastAPI). 화면과 Python 기능을 이어 준다 |
 | `static/index.html` | 화면 (HTML/JS). 검색 조건 · 결과 목록 · 문서 상세 3단 구성 |
 | `files/` | 내려받은 원문 파일 (문서번호별 폴더) |
-| `export_web.py` | 폰·웹용 목록(`docs/data.json`) 내보내기 |
-| `docs/` | GitHub Pages로 공개되는 폰·웹 페이지. 제목 검색 + 포털 원문 링크만 됨 |
+| `export_web.py` | 웹용 목록(`docs/data.json`) 내보내기·합치기 |
+| `docs/` | GitHub Pages로 공개되는 웹 페이지. 제목 검색 + 포털 원문 링크 + 포털에서 가져오기 |
 
-## 폰·웹에서 쓰기
+## 웹에서 쓰기 (다른 PC, 다른 선생님)
 
-https://jch1696.github.io/school-plan-search/ 에서 제목 검색, 정보공개포털 원문 보기, 포털에서 새로 가져오기가 됩니다.
-파일 다운로드, 본문 검색, OCR은 PC 프로그램에서만 됩니다.
+https://jch1696.github.io/school-plan-search/ — 설치 없이 브라우저만 있으면 됩니다.
+제목 검색, 정보공개포털 원문 보기(거기서 파일 받기), 포털에서 새로 가져오기가 됩니다.
+파일 일괄 다운로드, 본문 검색, OCR은 PC 프로그램에서만 됩니다.
 
-- **가져오기**: 검색어를 넣고 "목록에 없나요? 정보공개포털에서 가져오기"를 누르면 GitHub Actions가 포털을
-  검색해 목록에 추가합니다(1~2분). 처음 한 번 GitHub 토큰을 넣어야 하며, 만드는 법은 버튼을 누르면 나옵니다.
-  (Fine-grained token, 저장소 `school-plan-search`만, 권한 Actions: Read and write)
-- **PC와 합치기**: PC에서 **`폰용 목록 올리기.bat`** 을 더블클릭하면 폰에서 모은 문서를 PC DB에 넣고,
+- **누구나**: 검색과 "정보공개포털에서 보기".
+- **가져오기(실행 키 필요)**: 검색어를 넣고 왼쪽 아래 "가져오기"를 누르면 GitHub Actions가 포털을 검색해
+  목록에 추가합니다(1~2분). 실행 키는 관리자(저장소 주인)가 만들어 믿을 만한 분에게만 알려 줍니다.
+  만드는 법: GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** →
+  Repository access: `school-plan-search`만, Permissions → Actions: **Read and write**. 이 저장소의 워크플로 실행 외엔
+  아무 권한도 없는 키입니다. 키는 각자 브라우저에만 저장됩니다.
+- **PC와 합치기**: PC에서 **`웹 목록 올리기.bat`** 을 더블클릭하면 웹에서 모은 문서를 PC DB에 넣고,
   PC에서 수집한 문서를 웹 목록에 올립니다.
 
 GitHub에는 코드와 목록(`docs/data.json`)만 올라가고, 받은 파일·DB·`settings.json`은 올라가지 않습니다(`.gitignore`).

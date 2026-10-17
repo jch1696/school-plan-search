@@ -15,91 +15,137 @@
     --accent:#6c9cff; --accent-soft:#1f2a44; --ok:#5fd38a; --ok-soft:#163022; --warn:#f3b35c; --warn-soft:#3a2a12;
   }}
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+  html,body{height:100%}
+  body{margin:0;font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
   button,input,select{font:inherit}
-  header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px}
-  header h1{font-size:17px;margin:0 0 8px}
-  header h1 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+  a{color:var(--accent)}
+  header{height:56px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:17px;margin:0}
+  header small{color:var(--muted);font-size:12px}
+  header .sp{flex:1}
+  header a{font-size:13px}
+
+  /* PC: 왼쪽 조건 / 오른쪽 목록. 좁은 창: 한 줄 */
+  .wrap{display:grid;grid-template-columns:280px 1fr;height:calc(100% - 56px)}
+  aside{overflow:auto;padding:16px;border-right:1px solid var(--line)}
+  section{overflow:auto;padding:0 20px 40px}
+  @media (max-width:800px){
+    .wrap{display:block;height:auto}
+    aside{border-right:0;padding-bottom:4px}
+    section{padding:0 16px 40px}
+    header{height:auto;padding:10px 16px;flex-wrap:wrap}
+  }
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
   .search{display:flex;gap:6px}
-  .search input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);min-width:0}
+  .search input{flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);min-width:0}
   .search input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
-  .search button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:0 12px;cursor:pointer}
-  .filters{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
-  .filters::-webkit-scrollbar{display:none}
-  .chip{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .search button{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:0 10px;cursor:pointer}
+  .hint{font-size:12px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer;white-space:nowrap}
   .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
-  .filters select{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 10px;font-size:13px}
-  main{padding:0 16px 40px;max-width:760px;margin:0 auto}
-  .count{color:var(--muted);font-size:13px;padding:10px 0 4px}
-  .row{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+  .field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+  .kws{display:flex;flex-wrap:wrap;gap:4px}
+  .kw{font-size:12px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer}
+  .kw:hover{background:var(--accent-soft);color:var(--accent)}
+
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:18px}
+  .box h3{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:700}
+  .box p{margin:0 0 8px;font-size:12px;color:var(--muted)}
+  .box .ctl{display:flex;gap:6px}
+  .box .ctl select{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:7px}
+  .box .go{flex:none;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+  .box .go:disabled{opacity:.5}
+  .box .msg{font-size:12px;margin-top:8px;min-height:1.2em}
+  .box .tok{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+  .box .tok button{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:6px;padding:1px 8px;font-size:12px;cursor:pointer;margin-left:4px}
+
+  .list-head{position:sticky;top:0;z-index:1;background:var(--bg);padding:12px 0 6px;display:flex;align-items:baseline;gap:8px}
+  .list-head strong{font-size:15px}
+  .list-head .hint{flex:1}
+  .row{display:grid;grid-template-columns:86px 1fr auto;gap:2px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:6px 0}
+  .row .d{color:var(--muted);font-size:12px;grid-row:span 2}
   .row .t{font-weight:600;line-height:1.4}
-  .row .m{color:var(--muted);font-size:12px;margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .row .m{grid-column:2;color:var(--muted);font-size:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .row form{grid-column:3;grid-row:1/span 2}
+  .row form button{padding:7px 12px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap}
+  @media (max-width:800px){
+    .row{grid-template-columns:1fr}
+    .row .d,.row .m,.row form{grid-column:1;grid-row:auto}
+    .row form{margin-top:6px}.row form button{width:100%;padding:9px}
+  }
   .badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600}
   .badge.lv{background:var(--bg);color:var(--muted)}
   .badge.open{background:var(--ok-soft);color:var(--ok)}
   .badge.part{background:var(--warn-soft);color:var(--warn)}
-  .row form{margin-top:8px}
-  .row form button{width:100%;padding:9px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:9px;font-weight:600;cursor:pointer}
-  .more{width:100%;padding:12px;margin-top:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;cursor:pointer}
-  .empty{padding:50px 16px;text-align:center;color:var(--muted)}
+  .more{width:100%;padding:11px;margin-top:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;cursor:pointer}
+  .empty{padding:60px 16px;text-align:center;color:var(--muted)}
   .foot{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.7}
-  .foot a{color:var(--accent)}
-  .kws{display:flex;gap:6px;overflow-x:auto;padding:6px 0 0}
-  .kws::-webkit-scrollbar{display:none}
-  .kw{flex:none;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer;white-space:nowrap}
-  .collect{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}
-  .collect summary{font-weight:600;cursor:pointer}
-  .collect p{margin:8px 0;font-size:13px;color:var(--muted)}
-  .collect .ctl{display:flex;gap:6px;margin-top:8px}
-  .collect select{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:9px;padding:8px}
-  .collect .go{flex:2;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:9px;font-weight:600;cursor:pointer}
-  .collect .go:disabled{opacity:.5}
-  .collect .msg{font-size:13px;margin-top:8px;min-height:1.2em}
-  .collect .msg a{color:var(--accent)}
-  .collect .tok{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
-  .collect .tok button{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:6px;padding:2px 8px;font-size:12px;cursor:pointer;margin-left:4px}
   .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-1px;margin-right:5px}
   @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <header>
-  <h1>📚 학교 계획서 검색기 <small id="exported"></small></h1>
-  <div class="search">
-    <input type="search" id="q" placeholder="제목에서 찾기 (예: 학예회 운영)" autocomplete="off" autofocus>
-    <button onclick="document.getElementById('q').value='';search()" title="지우기">✕</button>
-  </div>
-  <div class="filters">
-    <span class="chip" data-f="level" data-v="초">초등</span><span class="chip" data-f="level" data-v="중">중학</span>
-    <span class="chip" data-f="level" data-v="고">고교</span><span class="chip" data-f="level" data-v="유">유치원</span>
-    <span class="chip" data-f="level" data-v="청">교육청</span>
-    <select id="open"><option value="">공개 전체</option><option>공개</option><option>부분공개</option></select>
-    <select id="region"><option value="">지역 전체</option></select>
-    <select id="days"><option value="30">1개월</option><option value="90">3개월</option><option value="180">6개월</option><option value="365" selected>1년</option><option value="99999">전체</option></select>
-  </div>
-  <div class="kws" id="kws"></div>
+  <h1>📚 학교 계획서 검색기</h1>
+  <small id="exported"></small>
+  <div class="sp"></div>
+  <a href="https://www.open.go.kr/othicInfo/infoList/orginlInfoList.do" target="_blank" rel="noopener">정보공개포털 ↗</a>
 </header>
 
-<main>
-  <div class="count" id="count">목록 불러오는 중…</div>
-  <details class="collect" id="collect">
-    <summary>목록에 없나요? 정보공개포털에서 가져오기</summary>
-    <p>위 검색어로 포털을 검색해 새 문서를 목록에 추가합니다. 1~2분 걸립니다.
+<div class="wrap">
+<aside>
+  <div class="field">
+    <label>검색어</label>
+    <div class="search">
+      <input type="search" id="q" placeholder="예: 학예회 운영" autocomplete="off" autofocus>
+      <button onclick="document.getElementById('q').value='';search()" title="지우기">✕</button>
+    </div>
+    <div class="hint" style="margin-top:4px">띄어쓰기로 여러 단어를 넣으면 모두 들어간 제목만 찾습니다</div>
+  </div>
+  <div class="field">
+    <label>학교급</label>
+    <div class="chips">
+      <span class="chip" data-v="초">초등</span><span class="chip" data-v="중">중학</span><span class="chip" data-v="고">고교</span>
+      <span class="chip" data-v="유">유치원</span><span class="chip" data-v="청">교육청</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>공개 구분 <span class="hint" style="font-weight:400">(부분공개는 개인정보 등이 가려진 문서)</span></label>
+    <select id="open"><option value="">전체</option><option>공개</option><option>부분공개</option></select>
+  </div>
+  <div class="field"><label>지역</label><select id="region"><option value="">전체</option></select></div>
+  <div class="field">
+    <label>기간</label>
+    <select id="days"><option value="30">최근 1개월</option><option value="90">최근 3개월</option><option value="180">최근 6개월</option><option value="365" selected>최근 1년</option><option value="99999">전체</option></select>
+  </div>
+  <div class="field"><label>이전에 가져온 검색어</label><div class="kws" id="kws"></div></div>
+
+  <div class="box">
+    <h3>정보공개포털에서 더 가져오기</h3>
+    <p>위 검색어로 포털을 검색해 새 문서를 목록에 추가합니다 (1~2분).
       "월항초"처럼 줄여 쓰면 "월항초등학교"로도 함께 찾습니다.</p>
     <div class="ctl">
       <select id="cDays"><option value="90">최근 3개월</option><option value="365" selected>최근 1년</option></select>
       <button class="go" id="cBtn" onclick="collect()">가져오기</button>
     </div>
     <div class="msg" id="cMsg"></div>
-    <div class="tok">GitHub 토큰: <span id="tokState"></span><button onclick="setToken()">설정</button><button onclick="clearToken()">지우기</button></div>
-  </details>
-  <div id="list"></div>
-  <div class="foot">
-    띄어쓰기로 여러 단어를 넣으면 모두 들어간 제목만 찾습니다.<br>
-    "포털에서 보기"를 누르면 정보공개포털 원문 페이지가 열립니다. 파일 다운로드와 본문 검색은 PC 프로그램에서만 됩니다.<br>
-    목록에 없는 문서는 <a href="https://www.open.go.kr/othicInfo/infoList/orginlInfoList.do" target="_blank" rel="noopener">정보공개포털에서 직접 검색</a>하세요.
+    <div class="tok" id="tok"></div>
   </div>
-</main>
+
+  <div class="foot">
+    "정보공개포털에서 보기"를 누르면 원문 페이지가 새 탭으로 열리고, 거기서 파일을 받을 수 있습니다.<br>
+    이 페이지는 목록만 검색합니다. 파일 일괄 다운로드와 본문 검색은 PC 프로그램에서만 됩니다.
+  </div>
+</aside>
+
+<section>
+  <div class="list-head"><strong id="count">불러오는 중…</strong><span class="hint" id="countHint"></span></div>
+  <div id="list"></div>
+</section>
+</div>
 
 <script>
 const $ = s => document.querySelector(s);
@@ -118,7 +164,7 @@ async function loadData(url = 'data.json?v=' + Math.floor(Date.now()/60000)){
   exportedAt = j.exported;
   $('#exported').textContent = `${j.exported} 기준 ${all.length.toLocaleString()}건`;
   const cur = $('#region').value, regions = [...new Set(all.map(r=>r.region))].sort();
-  $('#region').innerHTML = '<option value="">지역 전체</option>' + regions.map(r=>`<option ${r===cur?'selected':''}>${esc(r)}</option>`).join('');
+  $('#region').innerHTML = '<option value="">전체</option>' + regions.map(r=>`<option ${r===cur?'selected':''}>${esc(r)}</option>`).join('');
   $('#kws').innerHTML = (j.keywords||[]).map(k=>`<span class="kw" onclick="useKw(${JSON.stringify(k)})">${esc(k)}</span>`).join('');
 }
 function useKw(k){ $('#q').value = k; search(); }
@@ -144,11 +190,13 @@ function search(){
 
 function more(){
   const slice = hits.slice(shown, shown + PAGE); shown += slice.length;
-  $('#count').textContent = hits.length ? `${hits.length.toLocaleString()}건` + (shown < hits.length ? ` (${shown}건 표시)` : '') : '';
+  $('#count').textContent = `${hits.length.toLocaleString()}건`;
+  $('#countHint').textContent = shown < hits.length ? `(${shown}건 표시 중)` : '';
   const html = slice.map(r => `
     <div class="row">
+      <div class="d">${fmtDate(r.date)}</div>
       <div class="t">${esc(r.title)}</div>
-      <div class="m">${fmtDate(r.date)} <span class="badge lv">${esc(r.level)}</span>
+      <div class="m"><span class="badge lv">${esc(r.level)}</span>
         <span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span>
         ${esc(r.school)} · ${esc(r.region)} · 파일 ${(r.files||'').split('|').filter(Boolean).length}개</div>
       <form method="post" action="https://www.open.go.kr/othicInfo/infoList/infoListDetl.do" target="_blank">
@@ -161,19 +209,23 @@ function more(){
     </div>`).join('');
   const old = $('#moreBtn'); if(old) old.remove();
   $('#list').insertAdjacentHTML('beforeend', html);
-  if(!hits.length) $('#list').innerHTML = '<div class="empty">조건에 맞는 문서가 없습니다.<br>검색어를 줄이거나 기간을 늘려 보세요.</div>';
+  if(!hits.length) $('#list').innerHTML = '<div class="empty">조건에 맞는 문서가 없습니다.<br>검색어를 줄이거나 기간을 늘려 보세요. 왼쪽 아래 "가져오기"로 포털에서 새로 가져올 수도 있습니다.</div>';
   else if(shown < hits.length) $('#list').insertAdjacentHTML('beforeend', `<button class="more" id="moreBtn" onclick="more()">${Math.min(PAGE, hits.length-shown)}건 더 보기 (남은 ${(hits.length-shown).toLocaleString()}건)</button>`);
 }
 
 // ---------- 포털에서 가져오기 (GitHub Actions 실행) ----------
 const getToken = () => { try{ return localStorage.getItem('gh_token') || '' }catch{ return '' } };
-function showToken(){ $('#tokState').textContent = getToken() ? '저장됨' : '없음'; }
+function showToken(){
+  $('#tok').innerHTML = getToken()
+    ? '실행 키: 저장됨 <button onclick="setToken()">바꾸기</button><button onclick="clearToken()">지우기</button>'
+    : '가져오기는 실행 키가 있는 분만 쓸 수 있습니다. 키는 관리자에게 받으세요. <button onclick="setToken()">키 입력</button>';
+}
 function clearToken(){ try{ localStorage.removeItem('gh_token') }catch{} showToken(); }
 function setToken(){
   const t = prompt(
-`GitHub 토큰을 붙여넣으세요. (이 기기에만 저장됩니다)
+`실행 키(GitHub 토큰)를 붙여넣으세요. 이 브라우저에만 저장됩니다.
 
-만드는 법: GitHub 로그인 → Settings → Developer settings
+관리자가 만드는 법: GitHub 로그인 → Settings → Developer settings
 → Personal access tokens → Fine-grained tokens → Generate new token
  · Repository access: Only select repositories → school-plan-search
  · Permissions → Repository permissions → Actions: Read and write
@@ -188,7 +240,7 @@ const cmsg = (html, busy) => $('#cMsg').innerHTML = (busy ? '<span class="spin">
 
 async function collect(){
   const keyword = $('#q').value.trim();
-  if(!keyword){ cmsg('위 검색창에 검색어를 먼저 넣으세요'); $('#q').focus(); return; }
+  if(!keyword){ cmsg('검색어를 먼저 넣으세요'); $('#q').focus(); return; }
   if(!getToken() && !setToken()) return;
   const btn = $('#cBtn'); btn.disabled = true;
   const started = Date.now(), before = all.length, prevExported = exportedAt;
@@ -196,7 +248,7 @@ async function collect(){
     cmsg('포털 검색을 요청하는 중…', true);
     const r = await gh('/actions/workflows/collect.yml/dispatches', {method:'POST',
       body: JSON.stringify({ref:'main', inputs:{keyword, days:$('#cDays').value}})});
-    if(r.status === 401 || r.status === 403 || r.status === 404){ clearToken(); throw new Error('토큰이 맞지 않습니다. 다시 설정해 주세요 (' + r.status + ')'); }
+    if(r.status === 401 || r.status === 403 || r.status === 404){ clearToken(); throw new Error('실행 키가 맞지 않습니다. 다시 입력해 주세요 (' + r.status + ')'); }
     if(r.status !== 204) throw new Error('요청 실패 ' + r.status);
     // 방금 시작된 실행을 찾아 끝날 때까지 기다린다
     let run = null;

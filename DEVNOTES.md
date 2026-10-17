@@ -31,8 +31,8 @@
 | `collect.py` + `keywords.txt` | 검색어 일괄 수집(명령줄) |
 | `settings.json` | 저장 폴더(`download_dir`), 파일명 접두어(`prefix`) |
 | `*.bat` | 더블클릭 실행용. **cp949로 저장해야 함**(아래 함정 참고) |
-| `export_web.py` | `docs/data.json`(폰·웹용) 관리. PC: DB↔data.json 합쳐 내보내기. Actions: `collect` 모드로 포털 검색→data.json 추가 |
-| `docs/index.html` | GitHub Pages 페이지(폰용). `data.json`을 통째로 받아 브라우저에서 거름. 포털 상세는 POST 폼으로 새 탭. "가져오기"는 GitHub API로 워크플로 실행 |
+| `export_web.py` | `docs/data.json`(웹용) 관리. PC: DB↔data.json 합쳐 내보내기(`웹 목록 올리기.bat`). Actions: `collect` 모드로 포털 검색→data.json 추가 |
+| `docs/index.html` | GitHub Pages 페이지. **다른 PC·다른 선생님용**(설치 없이). PC 앱과 같은 2단(조건/목록), 800px 이하면 한 줄. `data.json`을 통째로 받아 브라우저에서 거름. 포털 상세는 POST 폼으로 새 탭. "가져오기"는 GitHub API로 워크플로 실행(토큰 필요) |
 | `.github/workflows/collect.yml` | `workflow_dispatch(keyword, days)` → `export_web.py collect` → data.json 커밋. `concurrency: collect`로 직렬화 |
 
 ### DB 테이블 (`opengo.db`)
@@ -125,6 +125,9 @@
     → 페이지가 run 상태를 폴링하고 끝나면 `raw.githubusercontent.com`에서 새 data.json을 받음(Pages CDN 캐시 10분 회피).
     목록이 두 곳(PC DB, data.json)에서 늘어나므로 `폰용 목록 올리기.bat`은 `git pull --rebase` → data.json의 새 문서를 DB에 넣기 → DB 전체 내보내기 → push.
     공통 함수(`level_of`, `region_of`, `expand_keyword`)는 Actions에 fastapi가 없어서 `server.py`→`opengo.py`로 옮김.
+12. (2026-10-17) 웹 페이지 용도 확정: 폰이 아니라 **다른 PC·다른 선생님**. PC 레이아웃으로 개편.
+    토큰은 공개 페이지에 넣을 수 없으니 "실행 키"로 부르고, 관리자가 만들어 믿을 만한 사람에게만 전달하는 방식.
+    토큰 없는 사람은 검색·포털 보기만. (대안으로 검토한 것: 토큰 없이 GitHub Actions 실행 → 불가. 다른 선생님이 collaborator → 계정 필요해서 보류)
 
 ## 7. 다음에 할 만한 것
 - [x] 스캔 PDF OCR (2026-10-17, Windows 내장 OCR)
