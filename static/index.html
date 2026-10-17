@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학교 계획서 검색기</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#fff; --line:#e3e7ee; --text:#1f2733; --muted:#6b7684;
+    --accent:#2563eb; --accent-soft:#e8efff; --ok:#15803d; --ok-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fff4e5;
+    --danger:#b91c1c; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+  button{font:inherit;cursor:pointer}
+  input,select{font:inherit}
+  a{color:var(--accent)}
+
+  header{height:56px;display:flex;align-items:center;gap:18px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:17px;margin:0;display:flex;align-items:center;gap:8px}
+  header .tabs{display:flex;gap:4px;margin-left:12px}
+  header .tabs button{border:0;background:none;padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:600}
+  header .tabs button.on{background:var(--accent-soft);color:var(--accent)}
+  header .spacer{flex:1}
+  header .folder{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+  header .folder code{background:var(--bg);padding:3px 8px;border-radius:6px;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;color:var(--text)}
+
+  .btn{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:8px;color:var(--text)}
+  .btn:hover{border-color:#c9d1dc;background:#fafbfd}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn.primary:disabled,.btn:disabled{opacity:.5;cursor:default}
+  .btn.sm{padding:4px 9px;font-size:13px}
+
+  main{display:grid;grid-template-columns:260px minmax(380px,1fr) minmax(380px,1.1fr);height:calc(100% - 56px)}
+  main.body-mode{grid-template-columns:260px 1fr}
+  .col{overflow:auto;border-right:1px solid var(--line);background:var(--panel)}
+  .col:last-child{border-right:0}
+  .col.filters{padding:18px 16px;background:var(--bg);border-right:0}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .field input[type=text],.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  .field input[type=text]:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;font-size:13px;color:var(--muted)}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .box h3{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:700}
+  .hint{font-size:12px;color:var(--muted)}
+  .kw{display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:6px;background:var(--bg);font-size:12px;cursor:pointer;color:var(--text)}
+  .kw:hover{background:var(--accent-soft);color:var(--accent)}
+  .tool{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .file .del{border:0;background:none;color:var(--muted);font-size:12px;padding:2px 4px;border-radius:6px}
+  .file .del:hover{color:var(--danger);background:#fdecec}
+  .ocr-note{font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:6px 10px;margin-bottom:6px}
+
+  .list-head{position:sticky;top:0;background:var(--panel);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;z-index:1}
+  .list-head strong{font-size:15px}
+  .list-head .muted{color:var(--muted);font-size:13px}
+  .row{display:grid;grid-template-columns:78px 1fr auto;gap:4px 12px;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+  .row:hover{background:#f7f9fc}
+  .row.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+  .row .date{color:var(--muted);font-size:12px;padding-top:2px}
+  .row .title{font-weight:600}
+  .row .sub{grid-column:2;color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+  .badge.lv{background:var(--bg);color:var(--muted)}
+  .badge.got{background:var(--ok-soft);color:var(--ok)}
+  .badge.part{background:var(--warn-soft);color:var(--warn)}
+  .badge.open{background:var(--ok-soft);color:var(--ok)}
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+
+  .detail{padding:20px 22px}
+  .detail .ph{padding:80px 20px;text-align:center;color:var(--muted)}
+  .detail h2{font-size:18px;margin:0 0 6px;line-height:1.4}
+  .detail .meta{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .detail .meta b{color:var(--text);font-weight:600}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+  .files{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .files .fh{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#f9fafc;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);font-weight:600}
+  .file{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center}
+  .file:last-child{border-bottom:0}
+  .file input{width:16px;height:16px;margin:0}
+  .file .nm{font-weight:600;word-break:break-all}
+  .file .st{font-size:12px;color:var(--muted);margin-top:2px;word-break:break-all}
+  .file .st.ok{color:var(--ok)}
+  .file .st.bad{color:var(--danger)}
+  .file .sz{color:var(--muted);font-size:12px;white-space:nowrap}
+  .file.closed{opacity:.6}
+  .preview{margin-top:18px}
+  .preview .ph2{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .preview select{padding:6px 9px;border:1px solid var(--line);border-radius:8px;max-width:360px}
+  .preview pre{white-space:pre-wrap;word-break:break-word;background:#fbfcfe;border:1px solid var(--line);border-radius:var(--radius);padding:14px;max-height:420px;overflow:auto;font-family:inherit;font-size:13px;margin:0}
+  .preview mark{background:#fde68a;padding:0 2px;border-radius:3px}
+
+  .hit{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+  .hit:hover{background:#f7f9fc}
+  .hit .t{font-weight:600}
+  .hit .m{color:var(--muted);font-size:12px;margin:2px 0 6px}
+  .hit .s{font-size:13px;line-height:1.6}
+  .hit .s mark{background:#fde68a;padding:0 2px;border-radius:3px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2733;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;max-width:80vw;z-index:9}
+  .toast.show{display:block}
+  .prog{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}
+  .prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 학교 계획서 검색기</h1>
+  <nav class="tabs">
+    <button id="tabTitle" class="on" onclick="setMode('title')">제목으로 찾기</button>
+    <button id="tabBody" onclick="setMode('body')">본문으로 찾기</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="folder">
+    저장 폴더 <code id="folderPath" title="">…</code>
+    <button class="btn sm" onclick="pickFolder()">변경</button>
+    <button class="btn sm" onclick="openFolder()">열기</button>
+  </div>
+</header>
+
+<main id="main">
+  <!-- 왼쪽: 검색 조건 -->
+  <aside class="col filters">
+    <div class="field">
+      <label>검색어</label>
+      <input type="text" id="q" placeholder="예: 학예회 운영" autofocus>
+      <div class="hint" style="margin-top:4px">띄어쓰기로 여러 단어를 넣으면 모두 포함된 것만 찾습니다</div>
+    </div>
+    <div class="field" id="titleOnly">
+      <label>학교급</label>
+      <div class="chips" id="levels">
+        <span class="chip" data-v="초">초등</span><span class="chip" data-v="중">중학</span>
+        <span class="chip" data-v="고">고교</span><span class="chip" data-v="유">유치원</span>
+        <span class="chip" data-v="청">교육청</span>
+      </div>
+    </div>
+    <div class="field titleOnly">
+      <label>공개 구분 <span class="hint" style="font-weight:400">(부분공개는 개인정보 등이 가려진 문서)</span></label>
+      <div class="chips" id="openType">
+        <span class="chip on" data-v="">전체</span><span class="chip" data-v="공개">공개</span><span class="chip" data-v="부분공개">부분공개</span>
+      </div>
+    </div>
+    <div class="field titleOnly">
+      <label>지역</label>
+      <select id="region"><option value="">전체</option></select>
+    </div>
+    <div class="field titleOnly">
+      <label>기간</label>
+      <select id="days">
+        <option value="30">최근 1개월</option><option value="90" selected>최근 3개월</option>
+        <option value="180">최근 6개월</option><option value="365">최근 1년</option><option value="3650">전체</option>
+      </select>
+    </div>
+    <div class="field titleOnly">
+      <label><input type="checkbox" id="onlyGot"> 받아둔 문서만</label>
+    </div>
+
+    <div class="box titleOnly" style="margin-top:22px">
+      <h3>정보공개포털에서 더 가져오기</h3>
+      <div class="hint" style="margin-bottom:8px">위 검색어로 포털을 검색해 새 문서 목록을 가져옵니다.<br>
+        포털은 줄임말과 정식 이름의 결과가 다릅니다. "월항초"처럼 줄여 쓰면 "월항초등학교"로도 함께 찾습니다.</div>
+      <div style="display:flex;gap:6px">
+        <select id="cDays" style="flex:1;padding:7px;border:1px solid var(--line);border-radius:8px">
+          <option value="30">최근 1개월</option><option value="90">최근 3개월</option><option value="365">최근 1년</option>
+        </select>
+        <button class="btn primary" id="collectBtn" onclick="collect()">가져오기</button>
+      </div>
+      <div id="collectMsg" class="hint" style="margin-top:8px"></div>
+      <div class="prog" id="collectProg" style="display:none"><i></i></div>
+      <div style="margin-top:12px" class="hint">이전에 가져온 검색어</div>
+      <div id="kws"></div>
+    </div>
+
+    <div class="box" style="margin-top:14px">
+      <div class="hint" id="stats">…</div>
+    </div>
+  </aside>
+
+  <!-- 가운데: 결과 목록 -->
+  <section class="col" id="listCol">
+    <div class="list-head">
+      <strong id="count">0건</strong><span class="muted" id="countHint"></span>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn sm" id="bulkBtn" onclick="bulk()" title="목록의 문서 본문 PDF를 한꺼번에 받습니다">목록 전체 본문 받기</button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- 오른쪽: 상세 -->
+  <section class="col detail" id="detail">
+    <div class="ph">왼쪽 목록에서 문서를 클릭하세요</div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d && d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6)}` : (d || '');
+const kb = n => n >= 1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1, Math.round(n/1024))+' KB';
+let mode = 'title', rows = [], total = 0, listParams = new URLSearchParams(), selected = null, meta = {}, toastT;
+
+function toast(msg, ms = 3000){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), ms); }
+async function api(path, opts){ const r = await fetch(path, opts); if(!r.ok){ let m = r.statusText; try{ m = (await r.json()).detail || m }catch{} throw new Error(m) } return r.json(); }
+const post = (p, body) => api(p, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})});
+async function waitJob(id, onTick){ for(;;){ const j = await api('/api/jobs/'+id); onTick && onTick(j); if(j.state !== 'running') return j; await new Promise(r=>setTimeout(r, 700)); } }
+
+// ---------- 메타 / 설정 ----------
+async function loadMeta(){
+  meta = await api('/api/meta');
+  $('#folderPath').textContent = meta.download_dir; $('#folderPath').title = meta.download_dir;
+  $('#stats').innerHTML = `저장된 문서 <b>${meta.docs.toLocaleString()}</b>건 · 받은 파일 <b>${meta.files.toLocaleString()}</b>개`
+    + (meta.stale ? `<div class="tool">탐색기에서 지운 파일 기록 <b>${meta.stale}</b>건 <button class="btn sm" onclick="cleanup()">기록 정리</button></div>` : '')
+    + (meta.need_ocr ? `<div class="tool">글자 없는(스캔) PDF <b>${meta.need_ocr}</b>개 <button class="btn sm" id="ocrAllBtn" onclick="ocr()">OCR로 읽기</button></div>` : '')
+    + (meta.other_pc ? `<div class="tool" title="DB가 구글 드라이브로 공유되어 다른 PC에서 받은 파일 기록도 보입니다">다른 PC에서 받은 파일 ${meta.other_pc}개</div>` : '');
+  $('#kws').innerHTML = meta.keywords.map(k=>`<span class="kw" onclick="useKw(${JSON.stringify(k)})">${esc(k)}</span>`).join('') || '<span class="hint">아직 없음</span>';
+  const sel = $('#region'), cur = sel.value; sel.innerHTML = '<option value="">전체</option>' + meta.regions.map(r=>`<option ${r===cur?'selected':''}>${esc(r)}</option>`).join('');
+}
+function useKw(k){ $('#q').value = k; search(); }
+async function pickFolder(){ try{ meta = await post('/api/pick_folder'); $('#folderPath').textContent = meta.download_dir; toast('저장 폴더: '+meta.download_dir) }catch(e){ toast('폴더 선택 실패: '+e.message) } }
+async function openFolder(path){ try{ await post('/api/open_folder', path ? {path} : {}) }catch(e){ toast(e.message) } }
+
+// ---------- 모드 ----------
+function setMode(m){
+  mode = m; $('#tabTitle').classList.toggle('on', m==='title'); $('#tabBody').classList.toggle('on', m==='body');
+  document.querySelectorAll('.titleOnly,#titleOnly').forEach(e=>e.style.display = m==='title' ? '' : 'none');
+  $('#main').classList.toggle('body-mode', m==='body');
+  $('#detail').style.display = m==='title' ? '' : 'none';
+  $('#bulkBtn').style.display = m==='title' ? '' : 'none';
+  $('#q').placeholder = m==='title' ? '예: 학예회 운영' : '예: 리허설 예산 (받아둔 문서의 본문에서 찾습니다)';
+  search();
+}
+
+// ---------- 검색 ----------
+let searchT;
+function searchSoon(){ clearTimeout(searchT); searchT = setTimeout(search, 250); }
+async function search(){
+  const q = $('#q').value.trim();
+  if(mode === 'body'){
+    if(!q){ $('#list').innerHTML = '<div class="empty">받아둔 문서의 본문에서 찾을 단어를 입력하세요.<br>먼저 "제목으로 찾기"에서 원문을 받아두어야 합니다.</div>'; $('#count').textContent=''; $('#countHint').textContent=''; return; }
+    try{
+      const r = await api('/api/search_text?q='+encodeURIComponent(q));
+      $('#count').textContent = `${r.total}개 파일`; $('#countHint').textContent = '에서 찾음';
+      $('#list').innerHTML = r.rows.map(h=>`
+        <div class="hit" onclick="openFolder(${JSON.stringify(h.path)})" title="클릭하면 파일을 엽니다">
+          <div class="t">${esc(h.title)}</div>
+          <div class="m">${esc(h.school)} · ${fmtDate(h.date)} · ${esc(h.file)}</div>
+          <div class="s">…${esc(h.snippet).replace(/\[/g,'<mark>').replace(/\]/g,'</mark>')}…</div>
+        </div>`).join('') || '<div class="empty">본문에 그 단어가 있는 문서가 없습니다.</div>';
+    }catch(e){ $('#list').innerHTML = `<div class="empty">${esc(e.message)}</div>` }
+    return;
+  }
+  const levels = [...document.querySelectorAll('#levels .chip.on')].map(c=>c.dataset.v).join(',');
+  const openType = document.querySelector('#openType .chip.on')?.dataset.v || '';
+  listParams = new URLSearchParams({q, level: levels, region: $('#region').value, open_type: openType, days: $('#days').value, only_got: $('#onlyGot').checked});
+  const r = await api('/api/docs?'+listParams);
+  rows = r.rows; total = r.total;
+  $('#bulkBtn').disabled = !rows.length;
+  renderList();
+}
+async function more(){
+  const btn = $('#moreBtn'); btn.disabled = true; btn.textContent = '불러오는 중…';
+  try{
+    const r = await api('/api/docs?'+listParams+'&offset='+rows.length);
+    rows = rows.concat(r.rows); total = r.total;
+    renderList();
+  }catch(e){ toast('불러오기 실패: '+e.message); btn.disabled = false; }
+}
+function renderList(){
+  $('#count').textContent = `${total.toLocaleString()}건`;
+  $('#countHint').textContent = rows.length < total ? `(${rows.length.toLocaleString()}건 표시 중)` : '';
+  if(!rows.length){ $('#list').innerHTML = '<div class="empty">조건에 맞는 문서가 없습니다.<br>왼쪽 아래 "가져오기"로 정보공개포털에서 새로 가져올 수 있어요.</div>'; return; }
+  const left = total - rows.length;
+  $('#list').innerHTML = rows.map((r,i)=>`
+    <div class="row ${selected===r.reg_no?'sel':''}" onclick="select(${i})">
+      <div class="date">${fmtDate(r.date)}</div>
+      <div class="title">${esc(r.title)}</div>
+      <div>${r.got ? `<span class="badge got">받음 ${r.got}</span>` : ''}</div>
+      <div class="sub"><span class="badge lv">${esc(r.level)}</span><span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span>${esc(r.school)} · ${esc(r.region)} · 파일 ${r.files.length}개</div>
+    </div>`).join('') + (left > 0 ? `<div style="padding:14px;text-align:center"><button class="btn" id="moreBtn" onclick="more()">${Math.min(100, left)}건 더 보기 (남은 ${left.toLocaleString()}건)</button></div>` : '');
+}
+
+// ---------- 상세 ----------
+let detailCache = {};
+async function select(i){
+  const r = rows[i]; selected = r.reg_no; renderList();
+  const d = $('#detail');
+  d.innerHTML = `<h2>${esc(r.title)}</h2><div class="meta"><b>${esc(r.school)}</b> · ${fmtDate(r.date)} · <span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span><br>${esc(r.org)}<br>${esc(r.unit_job||'')}</div>
+    <div class="hint"><span class="spin"></span>정보공개포털에서 파일 목록을 확인하는 중…</div>`;
+  try{
+    const info = detailCache[r.reg_no] || (detailCache[r.reg_no] = await api(`/api/docs/${r.reg_no}/files`));
+    if(selected !== r.reg_no) return;
+    renderDetail(r, info);
+  }catch(e){ d.querySelector('.hint').innerHTML = `⚠️ ${esc(e.message)}`; }
+}
+function renderDetail(r, info){
+  const f = info.detail_form;
+  const formHtml = `<form method="post" action="https://www.open.go.kr/othicInfo/infoList/infoListDetl.do" target="_blank" style="display:inline">
+    ${Object.entries(f).map(([k,v])=>`<input type="hidden" name="${k}" value="${esc(v)}">`).join('')}
+    <button class="btn" type="submit">정보공개포털에서 보기 ↗</button></form>`;
+  const got = info.files.filter(x=>x.status==='ok');
+  $('#detail').innerHTML = `
+    <h2>${esc(r.title)}</h2>
+    <div class="meta"><b>${esc(r.school)}</b> · ${fmtDate(r.date)} · <span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span>${r.open_type==='부분공개' ? '<span class="hint"> — 개인정보 등 일부가 가려진 채 제공됩니다</span>' : ''}<br>${esc(r.org)}<br>${esc(r.unit_job||'')}</div>
+    <div class="actions">${formHtml}${got.length ? `<button class="btn" onclick="openFolder()">저장 폴더 열기</button>` : ''}</div>
+    <div class="files">
+      <div class="fh"><span>파일 ${info.files.length}개 · 받을 파일에 체크</span>
+        <button class="btn primary sm" id="dlBtn" onclick="downloadSel('${r.reg_no}')">선택한 파일 받기</button></div>
+      ${info.files.map(x=>`
+        <label class="file ${x.closed?'closed':''}">
+          <input type="checkbox" value="${x.file_id}" ${x.closed?'disabled':''} ${(!x.closed && (x.kind==='본문' || x.status==='ok'))?'checked':''}>
+          <div><div class="nm">${esc(x.name)} <span class="badge lv">${esc(x.kind)}</span></div>
+            <div class="st ${x.status==='ok'?'ok':(x.status==='fail'||x.closed)?'bad':''}">${
+              x.status==='ok' ? `✔ 받음 → <a href="#" onclick="openFolder(${JSON.stringify(x.path)});return false">${esc(x.path)}</a>` :
+              x.closed ? '🔒 학교가 비공개로 올린 파일 (받을 수 없음)' :
+              x.status==='fail' ? `⚠ 지난번 실패: ${esc(x.error||'')}` : '아직 안 받음'}</div></div>
+          <div class="sz">${kb(x.size)}${x.status==='ok' ? `<br><button class="del" title="휴지통으로 보내고 기록도 지웁니다" onclick="event.preventDefault();delFile('${r.reg_no}','${x.file_id}',${esc(JSON.stringify(x.name))})">🗑 삭제</button>` : ''}</div>
+        </label>`).join('') || '<div class="file"><div></div><div class="st">파일이 없습니다</div></div>'}
+    </div>
+    <div id="dlMsg" class="hint" style="margin-top:8px"></div>
+    ${got.length ? `<div class="preview"><div class="ph2"><strong>본문 미리보기</strong>
+        <select id="pvSel" onchange="loadText(this.value)">${got.map(x=>`<option value="${x.file_id}">${esc(x.name)}</option>`).join('')}</select></div>
+        <div id="pvNote"></div><pre id="pv">불러오는 중…</pre></div>` : ''}`;
+  if(got.length) loadText(got[0].file_id);
+}
+async function loadText(fid){
+  const r = await api('/api/text/'+fid);
+  const isOcr = r.text.startsWith('[OCR] '), text = isOcr ? r.text.slice(6) : r.text;
+  const empty = !text.trim() || text.startsWith('[OCR 실패');
+  $('#pvNote').innerHTML = isOcr ? '<div class="ocr-note">스캔 문서라 OCR로 읽은 글자입니다. 틀린 글자가 있을 수 있어요.</div>'
+    : empty ? `<div class="ocr-note">${text.startsWith('[OCR 실패') ? esc(text) : '글자가 없습니다. 스캔 문서일 수 있어요.'}
+        <button class="btn sm" id="ocrOneBtn" onclick="ocr(['${fid}'])">OCR로 글자 읽기</button></div>` : '';
+  const words = $('#q').value.trim().split(/\s+/).filter(Boolean);
+  let html = esc(empty ? '' : text);
+  for(const w of words) html = html.replace(new RegExp(esc(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'), m=>`<mark>${m}</mark>`);
+  $('#pv').innerHTML = html;
+}
+async function downloadSel(reg_no){
+  const ids = [...document.querySelectorAll('.file input:checked')].map(c=>c.value);
+  if(!ids.length){ toast('받을 파일에 체크해 주세요'); return; }
+  const btn = $('#dlBtn'); btn.disabled = true; $('#dlMsg').innerHTML = '<span class="spin"></span>내려받는 중… (개인정보 검사 때문에 파일당 수 초 걸립니다)';
+  try{
+    const {job} = await post('/api/download', {reg_no, file_ids: ids});
+    const j = await waitJob(job, j => $('#dlMsg').innerHTML = `<span class="spin"></span>${esc(j.message)}`);
+    $('#dlMsg').innerHTML = j.results.map(x => x.status==='완료' ? `✔ ${esc(x.file)}` : `⚠ ${esc(x.file)}: ${esc(x.error||x.status)}`).join('<br>');
+    delete detailCache[reg_no]; await loadMeta();
+    const i = rows.findIndex(r=>r.reg_no===reg_no); if(i>=0){ rows[i].got = j.results.filter(x=>x.status!=='실패').length; await select(i); }
+    toast(j.message);
+  }catch(e){ $('#dlMsg').textContent = '실패: '+e.message; btn.disabled = false; }
+}
+async function bulk(){
+  if(!rows.length) return;
+  // 화면에 다 안 펼친 것까지 목록 전체를 대상으로 한다
+  const all = rows.length < total ? (await api('/api/docs?'+listParams+'&limit='+total)).rows : rows;
+  const todo = all.filter(r=>!r.got);
+  if(!todo.length){ toast('목록의 문서는 모두 받아두었습니다'); return; }
+  if(!confirm(`아직 안 받은 ${todo.length}건의 본문 PDF를 저장 폴더에 받습니다.\n(건당 수 초 걸립니다) 계속할까요?`)) return;
+  const btn = $('#bulkBtn'); btn.disabled = true;
+  try{
+    const {job} = await post('/api/download', {reg_nos: todo.map(r=>r.reg_no), attachments: false});
+    const j = await waitJob(job, j => { btn.textContent = `받는 중 ${Math.round(j.progress*100)}%`; });
+    toast(j.message, 6000); detailCache = {}; await loadMeta(); await search();
+  }catch(e){ toast('실패: '+e.message) }
+  btn.textContent = '목록 전체 본문 받기'; btn.disabled = false;
+}
+
+// ---------- 파일 정리 / OCR ----------
+async function delFile(reg_no, fid, name){
+  if(!confirm(`"${name}"\n\n이 파일을 휴지통으로 보내고 기록(본문검색 포함)도 지웁니다. 계속할까요?`)) return;
+  try{
+    const {results} = await post('/api/files/delete', {file_ids:[fid]});
+    const x = results[0];
+    if(x && x.status==='실패') throw new Error(x.error);
+    toast('휴지통으로 보냈습니다: '+name);
+    delete detailCache[reg_no]; await loadMeta();
+    const i = rows.findIndex(r=>r.reg_no===reg_no); if(i>=0){ rows[i].got = Math.max(0, rows[i].got-1); await select(i); }
+  }catch(e){ toast('삭제 실패: '+e.message) }
+}
+async function cleanup(){
+  const s = await api('/api/files/stale');
+  if(!s.stale){ toast('정리할 기록이 없습니다'); return loadMeta(); }
+  if(!confirm(`탐색기에서 지운 파일의 기록 ${s.stale}건을 정리합니다.\n(파일이 이미 없으니 본문검색에서도 빠집니다)`)) return;
+  const r = await post('/api/files/cleanup');
+  toast(`기록 ${r.removed}건을 정리했습니다`); detailCache = {}; await loadMeta(); await search();
+}
+async function ocr(file_ids){
+  const btn = file_ids ? $('#ocrOneBtn') : $('#ocrAllBtn'), label = btn?.textContent;
+  if(btn) btn.disabled = true;
+  try{
+    const {job} = await post('/api/ocr', file_ids ? {file_ids} : {});
+    const j = await waitJob(job, j => { if(btn) btn.textContent = `읽는 중 ${Math.round(j.progress*100)}%`; });
+    const fail = j.results.find(x=>x.status==='실패');
+    toast(fail ? `${j.message} — ${fail.error}` : j.message, 5000);
+    await loadMeta();
+    if(file_ids && $('#pvSel')) loadText($('#pvSel').value);
+  }catch(e){ toast('OCR 실패: '+e.message) }
+  if(btn){ btn.disabled = false; btn.textContent = label; }
+}
+
+// ---------- 수집 ----------
+async function collect(){
+  const keyword = $('#q').value.trim();
+  if(!keyword){ toast('검색어를 먼저 입력하세요'); $('#q').focus(); return; }
+  const btn = $('#collectBtn'); btn.disabled = true; $('#collectProg').style.display = ''; $('#collectMsg').innerHTML = '<span class="spin"></span>정보공개포털 검색 중…';
+  try{
+    const {job} = await post('/api/collect', {keyword, days: $('#cDays').value, max_pages: 20});
+    const j = await waitJob(job, j => { $('#collectMsg').innerHTML = `<span class="spin"></span>${esc(j.message)}`; $('#collectProg i').style.width = (j.progress*100)+'%'; });
+    $('#collectMsg').textContent = j.state==='error' ? '실패: '+j.message : j.message;
+    await loadMeta(); await search();
+  }catch(e){ $('#collectMsg').textContent = '실패: '+e.message }
+  btn.disabled = false; setTimeout(()=>{ $('#collectProg').style.display='none'; $('#collectProg i').style.width='0' }, 1500);
+}
+
+// ---------- 이벤트 ----------
+$('#q').addEventListener('input', searchSoon);
+$('#q').addEventListener('keydown', e => { if(e.key==='Enter') search(); });
+$('#levels').addEventListener('click', e => { const c = e.target.closest('.chip'); if(c){ c.classList.toggle('on'); search(); } });
+$('#openType').addEventListener('click', e => { const c = e.target.closest('.chip'); if(c){ document.querySelectorAll('#openType .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); search(); } });
+['#region','#days','#onlyGot'].forEach(s => $(s).addEventListener('change', search));
+loadMeta().then(search);
+</script>
+</body>
+</html>

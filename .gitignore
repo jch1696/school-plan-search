@@ -1,0 +1,9 @@
+# 개인 데이터 — GitHub에 올리지 않음
+opengo.db
+opengo.db-journal
+files/
+settings.json
+
+__pycache__/
+*.pyc
+.claude/

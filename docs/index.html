@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학교 계획서 검색기</title>
+<meta name="description" content="정보공개포털의 교육청·학교 원문 목록을 제목으로 검색합니다">
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#fff; --line:#e3e7ee; --text:#1f2733; --muted:#6b7684;
+    --accent:#2563eb; --accent-soft:#e8efff; --ok:#15803d; --ok-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fff4e5;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg:#121519; --panel:#1b1f26; --line:#2b313b; --text:#e6e9ee; --muted:#98a2b3;
+    --accent:#6c9cff; --accent-soft:#1f2a44; --ok:#5fd38a; --ok-soft:#163022; --warn:#f3b35c; --warn-soft:#3a2a12;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+  button,input,select{font:inherit}
+  header{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px}
+  header h1{font-size:17px;margin:0 0 8px}
+  header h1 small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+  .search{display:flex;gap:6px}
+  .search input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);min-width:0}
+  .search input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .search button{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:0 12px;cursor:pointer}
+  .filters{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch}
+  .filters::-webkit-scrollbar{display:none}
+  .chip{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .filters select{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:5px 10px;font-size:13px}
+  main{padding:0 16px 40px;max-width:760px;margin:0 auto}
+  .count{color:var(--muted);font-size:13px;padding:10px 0 4px}
+  .row{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+  .row .t{font-weight:600;line-height:1.4}
+  .row .m{color:var(--muted);font-size:12px;margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600}
+  .badge.lv{background:var(--bg);color:var(--muted)}
+  .badge.open{background:var(--ok-soft);color:var(--ok)}
+  .badge.part{background:var(--warn-soft);color:var(--warn)}
+  .row form{margin-top:8px}
+  .row form button{width:100%;padding:9px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:9px;font-weight:600;cursor:pointer}
+  .more{width:100%;padding:12px;margin-top:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;cursor:pointer}
+  .empty{padding:50px 16px;text-align:center;color:var(--muted)}
+  .foot{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.7}
+  .foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 학교 계획서 검색기 <small id="exported"></small></h1>
+  <div class="search">
+    <input type="search" id="q" placeholder="제목에서 찾기 (예: 학예회 운영)" autocomplete="off" autofocus>
+    <button onclick="document.getElementById('q').value='';search()" title="지우기">✕</button>
+  </div>
+  <div class="filters">
+    <span class="chip" data-f="level" data-v="초">초등</span><span class="chip" data-f="level" data-v="중">중학</span>
+    <span class="chip" data-f="level" data-v="고">고교</span><span class="chip" data-f="level" data-v="유">유치원</span>
+    <span class="chip" data-f="level" data-v="청">교육청</span>
+    <select id="open"><option value="">공개 전체</option><option>공개</option><option>부분공개</option></select>
+    <select id="region"><option value="">지역 전체</option></select>
+    <select id="days"><option value="30">1개월</option><option value="90">3개월</option><option value="180">6개월</option><option value="365" selected>1년</option><option value="99999">전체</option></select>
+  </div>
+</header>
+
+<main>
+  <div class="count" id="count">목록 불러오는 중…</div>
+  <div id="list"></div>
+  <div class="foot">
+    띄어쓰기로 여러 단어를 넣으면 모두 들어간 제목만 찾습니다.<br>
+    "포털에서 보기"를 누르면 정보공개포털 원문 페이지가 열립니다. 파일 다운로드와 본문 검색은 PC 프로그램에서만 됩니다.<br>
+    목록에 없는 문서는 <a href="https://www.open.go.kr/othicInfo/infoList/orginlInfoList.do" target="_blank" rel="noopener">정보공개포털에서 직접 검색</a>하세요.
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => d && d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6)}` : (d || '');
+const PAGE = 50;
+let all = [], hits = [], shown = 0;
+
+async function load(){
+  try{
+    const r = await fetch('data.json', {cache:'no-cache'});
+    const j = await r.json();
+    all = j.rows.map(a => Object.fromEntries(j.fields.map((f,i)=>[f, a[i]])));
+    $('#exported').textContent = `${j.exported} 기준 ${all.length.toLocaleString()}건`;
+    const regions = [...new Set(all.map(r=>r.region))].sort();
+    $('#region').innerHTML = '<option value="">지역 전체</option>' + regions.map(r=>`<option>${esc(r)}</option>`).join('');
+    restore(); search();
+  }catch(e){ $('#count').textContent = '목록을 불러오지 못했습니다: ' + e.message; }
+}
+
+function search(){
+  const words = $('#q').value.trim().split(/\s+/).filter(Boolean);
+  const levels = [...document.querySelectorAll('.chip.on')].map(c=>c.dataset.v);
+  const open = $('#open').value, region = $('#region').value, days = +$('#days').value;
+  const d = new Date(); d.setDate(d.getDate() - days);
+  const since = d.toISOString().slice(0,10).replace(/-/g,'');
+  hits = all.filter(r => r.date >= since
+    && words.every(w => (r.title||'').includes(w))
+    && (!levels.length || levels.includes(r.level))
+    && (!open || r.open_type === open)
+    && (!region || r.region === region));
+  shown = 0; $('#list').innerHTML = ''; more(); remember();
+}
+
+function more(){
+  const slice = hits.slice(shown, shown + PAGE); shown += slice.length;
+  $('#count').textContent = hits.length ? `${hits.length.toLocaleString()}건` + (shown < hits.length ? ` (${shown}건 표시)` : '') : '';
+  const html = slice.map(r => `
+    <div class="row">
+      <div class="t">${esc(r.title)}</div>
+      <div class="m">${fmtDate(r.date)} <span class="badge lv">${esc(r.level)}</span>
+        <span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span>
+        ${esc(r.school)} · ${esc(r.region)} · 파일 ${r.nfiles}개</div>
+      <form method="post" action="https://www.open.go.kr/othicInfo/infoList/infoListDetl.do" target="_blank">
+        <input type="hidden" name="prdnNstRgstNo" value="${esc(r.reg_no)}">
+        <input type="hidden" name="prdnDt" value="${esc(r.produced)}">
+        <input type="hidden" name="nstSeCd" value="${esc(r.instt_se)}">
+        <input type="hidden" name="title" value="원문정보">
+        <button type="submit">정보공개포털에서 보기 ↗</button>
+      </form>
+    </div>`).join('');
+  const old = $('#moreBtn'); if(old) old.remove();
+  $('#list').insertAdjacentHTML('beforeend', html);
+  if(!hits.length) $('#list').innerHTML = '<div class="empty">조건에 맞는 문서가 없습니다.<br>검색어를 줄이거나 기간을 늘려 보세요.</div>';
+  else if(shown < hits.length) $('#list').insertAdjacentHTML('beforeend', `<button class="more" id="moreBtn" onclick="more()">${Math.min(PAGE, hits.length-shown)}건 더 보기 (남은 ${(hits.length-shown).toLocaleString()}건)</button>`);
+}
+
+// 마지막 검색 조건 기억 (이 폰에서만)
+function remember(){ try{ localStorage.setItem('q', JSON.stringify({q:$('#q').value, open:$('#open').value, region:$('#region').value, days:$('#days').value,
+  levels:[...document.querySelectorAll('.chip.on')].map(c=>c.dataset.v)})) }catch{} }
+function restore(){ try{ const s = JSON.parse(localStorage.getItem('q')||'null'); if(!s) return;
+  $('#q').value = s.q||''; $('#open').value = s.open||''; $('#region').value = s.region||''; $('#days').value = s.days||'365';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', (s.levels||[]).includes(c.dataset.v))) }catch{} }
+
+let t; $('#q').addEventListener('input', ()=>{ clearTimeout(t); t = setTimeout(search, 200) });
+$('#q').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); search(); $('#q').blur(); } });
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', ()=>{ c.classList.toggle('on'); search() }));
+['#open','#region','#days'].forEach(s => $(s).addEventListener('change', search));
+load();
+</script>
+</body>
+</html>
