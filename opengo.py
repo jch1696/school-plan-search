@@ -47,8 +47,14 @@ def _session() -> requests.Session:
     지문 등록을 건너뛰면 검색 요청이 code 491로 거부된다.
     """
     import hashlib
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
     s = requests.Session()
     s.headers.update({"User-Agent": UA})
+    # 포털이 가끔 접속을 늦게 받는다(특히 해외 GitHub Actions에서 connect timeout). 접속 단계 실패는 다시 시도.
+    retry = Retry(total=5, connect=5, read=2, backoff_factor=5, status_forcelist=[502, 503, 504],
+                  allowed_methods=frozenset(["GET", "POST"]), raise_on_status=False)
+    s.mount("https://", HTTPAdapter(max_retries=retry))
     s.get(LIST_PAGE, timeout=30)  # 세션 쿠키 확보
     fp = hashlib.sha256(json.dumps({"userAgent": UA, "platform": "Win32"}).encode()).hexdigest().upper()
     s.post(f"{BASE}/common/util/setFingerPrint.ajax", data={"fingerprint": fp},
