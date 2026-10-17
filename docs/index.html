@@ -66,14 +66,19 @@
   .list-head strong{font-size:15px}
   .list-head .hint{flex:1}
   .row{display:grid;grid-template-columns:86px 1fr auto;gap:2px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:6px 0}
-  .row .d{color:var(--muted);font-size:12px;grid-row:span 2}
+  .row .d{color:var(--muted);font-size:12px;grid-row:span 3}
   .row .t{font-weight:600;line-height:1.4}
   .row .m{grid-column:2;color:var(--muted);font-size:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  .row form{grid-column:3;grid-row:1/span 2}
+  .row .f{grid-column:2;display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+  .row .file{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 7px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .file b{font-weight:600;color:var(--text)}
+  .row .file.main b{color:var(--accent)}
+  .row .nofile{font-size:12px;color:var(--muted)}
+  .row form{grid-column:3;grid-row:1/span 3}
   .row form button{padding:7px 12px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap}
   @media (max-width:800px){
     .row{grid-template-columns:1fr}
-    .row .d,.row .m,.row form{grid-column:1;grid-row:auto}
+    .row .d,.row .m,.row .f,.row form{grid-column:1;grid-row:auto}
     .row form{margin-top:6px}.row form button{width:100%;padding:9px}
   }
   .badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600}
@@ -151,6 +156,13 @@
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = d => d && d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6)}` : (d || '');
+// 첨부파일 이름 목록. 포털이 "[본문] 결재문서본문.pdf|[첨부] 계획.hwp" 꼴로 준다
+function fileList(files){
+  const names = (files||'').split('|').filter(Boolean);
+  if(!names.length) return '<span class="nofile">파일 없음</span>';
+  return names.map(n => { const m = n.match(/^\[(.+?)\]\s*(.*)$/); const kind = m ? m[1] : '', name = m ? m[2] : n;
+    return `<span class="file ${kind==='본문'?'main':''}" title="${esc(n)}">${kind ? `<b>${esc(kind)}</b> ` : ''}${esc(name)}</span>`; }).join('');
+}
 const PAGE = 50, REPO = 'jch1696/school-plan-search', API = 'https://api.github.com/repos/' + REPO;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let all = [], hits = [], shown = 0, exportedAt = '';
@@ -198,7 +210,8 @@ function more(){
       <div class="t">${esc(r.title)}</div>
       <div class="m"><span class="badge lv">${esc(r.level)}</span>
         <span class="badge ${r.open_type==='부분공개'?'part':'open'}">${esc(r.open_type||'')}</span>
-        ${esc(r.school)} · ${esc(r.region)} · 파일 ${(r.files||'').split('|').filter(Boolean).length}개</div>
+        ${esc(r.school)} · ${esc(r.region)}</div>
+      <div class="f">${fileList(r.files)}</div>
       <form method="post" action="https://www.open.go.kr/othicInfo/infoList/infoListDetl.do" target="_blank">
         <input type="hidden" name="prdnNstRgstNo" value="${esc(r.reg_no)}">
         <input type="hidden" name="prdnDt" value="${esc(r.produced)}">
