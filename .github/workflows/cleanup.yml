@@ -1,0 +1,27 @@
+name: 받은 파일 정리
+# Release(files)에 올라간 zip 중 3일 지난 것을 지운다. 매일 새벽 4시(한국).
+on:
+  schedule:
+    - cron: "0 19 * * *"   # UTC 19:00 = KST 04:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      KEEP_DAYS: "3"
+    steps:
+      - name: 오래된 자산 삭제
+        run: |
+          cutoff=$(date -u -d "-${KEEP_DAYS} days" +%Y-%m-%dT%H:%M:%SZ)
+          echo "기준: $cutoff 이전에 올린 파일 삭제"
+          gh api "repos/${{ github.repository }}/releases/tags/files" --jq ".assets[] | select(.created_at < \"$cutoff\") | \"\(.id) \(.name) \(.created_at)\"" 2>/dev/null \
+          | while read -r id name created; do
+              echo "삭제: $name ($created)"
+              gh api -X DELETE "repos/${{ github.repository }}/releases/assets/$id"
+            done
+          echo "완료"

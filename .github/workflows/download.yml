@@ -1,0 +1,37 @@
+name: 파일 받기
+# 웹 페이지의 "파일 받기" 버튼이 실행한다. 문서 한 건의 원문 파일을 받아 zip으로 Release(files)에 올린다.
+# 올린 zip은 cleanup.yml이 3일 뒤 지운다.
+on:
+  workflow_dispatch:
+    inputs:
+      reg_no:
+        description: 문서 등록번호
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: download-${{ inputs.reg_no }}
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Seoul
+      PYTHONIOENCODING: utf-8
+      REG_NO: ${{ inputs.reg_no }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: 포털에서 파일 받아 zip
+        run: python fetch_files.py "$REG_NO" out
+      - name: Release에 올리기
+        run: |
+          gh release view files >/dev/null 2>&1 || gh release create files --title "받은 파일 (3일 보관)" --notes "웹 페이지에서 받은 원문 파일. 3일 뒤 자동 삭제."
+          gh release upload files "out/$REG_NO.zip" "out/$REG_NO.json" --clobber
