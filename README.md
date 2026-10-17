@@ -29,6 +29,9 @@ https://jch1696.github.io/school-plan-search/ — 설치 없이 브라우저만 
   만드는 법: GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** →
   Repository access: `school-plan-search`만, Permissions → Actions: **Read and write**. 이 저장소의 워크플로 실행 외엔
   아무 권한도 없는 키입니다. 키는 각자 브라우저에만 저장됩니다.
+- **파일 받기(실행 키 필요)**: 문서의 "파일 받기"를 누르면 GitHub Actions가 포털에서 본문·붙임을 전부 받아
+  zip으로 올려 주고, 페이지에 "zip 받기" 링크가 생깁니다(1~2분). 포털 화면은 2026-09부터 교육기관 붙임파일
+  버튼을 숨겼지만 이 방법으로는 받아집니다. zip은 **3일 뒤 자동 삭제**됩니다(매일 새벽 정리).
 - **PC와 합치기**: PC에서 **`웹 목록 올리기.bat`** 을 더블클릭하면 웹에서 모은 문서를 PC DB에 넣고,
   PC에서 수집한 문서를 웹 목록에 올립니다.
 

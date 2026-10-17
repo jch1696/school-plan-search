@@ -34,6 +34,8 @@
 | `export_web.py` | `docs/data.json`(웹용) 관리. PC: DB↔data.json 합쳐 내보내기(`웹 목록 올리기.bat`). Actions: `collect` 모드로 포털 검색→data.json 추가 |
 | `docs/index.html` | GitHub Pages 페이지. **다른 PC·다른 선생님용**(설치 없이). PC 앱과 같은 2단(조건/목록), 800px 이하면 한 줄. `data.json`을 통째로 받아 브라우저에서 거름. 포털 상세는 POST 폼으로 새 탭. "가져오기"는 GitHub API로 워크플로 실행(토큰 필요) |
 | `.github/workflows/collect.yml` | `workflow_dispatch(keyword, days)` → `export_web.py collect` → data.json 커밋. `concurrency: collect`로 직렬화 |
+| `fetch_files.py` + `download.yml` | `workflow_dispatch(reg_no)` → 메모리 DB로 `wonmun.download_doc` → `<reg_no>.zip`(+요약 json)을 Release `files`에 `--clobber` 업로드 |
+| `cleanup.yml` | 매일 KST 04:00, Release `files`의 3일 지난 자산 삭제 |
 
 ### DB 테이블 (`opengo.db`)
 - `docs` : 목록 1건 = 문서 1건. PK `reg_no`(=PRDCTN_INSTT_REGIST_NO). `open_type`은 "공개"/"부분공개".
@@ -135,6 +137,10 @@
 12. (2026-10-17) 웹 페이지 용도 확정: 폰이 아니라 **다른 PC·다른 선생님**. PC 레이아웃으로 개편.
     토큰은 공개 페이지에 넣을 수 없으니 "실행 키"로 부르고, 관리자가 만들어 믿을 만한 사람에게만 전달하는 방식.
     토큰 없는 사람은 검색·포털 보기만. (대안으로 검토한 것: 토큰 없이 GitHub Actions 실행 → 불가. 다른 선생님이 collaborator → 계정 필요해서 보류)
+13. (2026-10-17) 웹 "파일 받기": 포털이 교육기관 붙임 버튼을 숨겨서(3-4-1) Actions가 대신 받아 Release zip으로 제공. 3일 보관(사용자 결정).
+    페이지는 처음 열 때 `GET /releases/tags/files`로 자산 목록을 받아 이미 있는 zip은 바로 링크로 보여 줌.
+    Release 다운로드 URL은 공개(링크 아는 사람 누구나) → 보관 기간을 짧게. zip 안 파일명은 PC와 같은 `[학교] 제목 - 원래이름`.
+    상시 서버(Render 등)는 포털 해외 차단 미확인·계정 추가라 보류. 기다림(1~2분)이 문제 되면 그때 검토.
 
 ## 7. 다음에 할 만한 것
 - [x] 스캔 PDF OCR (2026-10-17, Windows 내장 OCR)
