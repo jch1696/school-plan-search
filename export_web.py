@@ -86,4 +86,4 @@ if __name__ == "__main__":
         print(", ".join(f"'{k}' {n}건" for k, n in found.items()) + f" 확인, 새 문서 {added}건 추가")
     else:
         total, imported = export_from_db()
-        print(f"폰에서 모은 문서 {imported}건을 DB에 넣음. {total}건 -> {OUT} ({OUT.stat().st_size // 1024} KB)")
+        print(f"웹에서 모은 문서 {imported}건을 DB에 넣음. {total}건 -> {OUT} ({OUT.stat().st_size // 1024} KB)")
