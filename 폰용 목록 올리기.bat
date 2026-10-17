@@ -1,8 +1,10 @@
 @echo off
 cd /d "%~dp0"
 title Upload list for phone
-echo 폰용 목록을 내보내고 GitHub에 올립니다.
+echo 폰에서 모은 목록을 받아 PC와 합치고, 다시 GitHub에 올립니다.
 echo.
+git pull --rebase
+if errorlevel 1 goto fail
 python export_web.py
 if errorlevel 1 goto fail
 git add docs/data.json

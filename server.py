@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import os
-import re
 import sqlite3
 import threading
 import time
@@ -37,24 +36,7 @@ def db() -> sqlite3.Connection:
     return con
 
 
-def level_of(school: str) -> str:
-    s = school or ""
-    if "유치원" in s:
-        return "유"
-    if "초등학교" in s:
-        return "초"
-    if "중학교" in s:
-        return "중"
-    if "고등학교" in s or "고교" in s:
-        return "고"
-    if "교육청" in s or "교육지원청" in s:
-        return "청"
-    return "기타"
-
-
-def region_of(org: str) -> str:
-    m = re.match(r"(\S+?교육청)", org or "")
-    return m.group(1).replace("특별자치도", "").replace("특별시", "").replace("광역시", "").replace("특별자치시", "") if m else "기타"
+level_of, region_of, expand_keyword = opengo.level_of, opengo.region_of, opengo.expand_keyword
 
 
 def run_job(job_id: str, fn):
@@ -115,7 +97,8 @@ def meta():
         "stale": len(stale), "other_pc": other, "need_ocr": len(wonmun.ocr_candidates(con)),
         "docs": con.execute("SELECT COUNT(*) FROM docs").fetchone()[0],
         "files": con.execute("SELECT COUNT(*) FROM files WHERE status='ok'").fetchone()[0],
-        "keywords": [r[0] for r in con.execute("SELECT keyword FROM docs GROUP BY keyword ORDER BY MAX(fetched_at) DESC")],
+        "keywords": [r[0] for r in con.execute("SELECT keyword FROM docs WHERE keyword IS NOT NULL "
+                                               "GROUP BY keyword ORDER BY MAX(fetched_at) DESC")],
         "regions": regions,
         "download_dir": str(wonmun.download_dir()),
         "prefix": wonmun.load_settings().get("prefix", True),
@@ -170,16 +153,6 @@ def search_text(q: str, limit: int = 200):
 
 
 # ---------------- 오래 걸리는 작업 ----------------
-
-SHORT_SCHOOL = {"초": "초등학교", "중": "중학교", "고": "고등학교"}
-
-
-def expand_keyword(keyword: str) -> str | None:
-    """'월항초' → '월항초등학교'. 포털은 단어 단위로 찾아서 줄임말로는 정식 이름이 안 걸린다.
-    3글자 이상이고 초/중/고로 끝나는 단어만 늘린다. 엉뚱하게 늘어나도('결과보고등학교') 0건이라 해는 없다."""
-    words = keyword.split()
-    out = [w[:-1] + SHORT_SCHOOL[w[-1]] if len(w) >= 3 and w[-1] in SHORT_SCHOOL else w for w in words]
-    return " ".join(out) if out != words else None
 
 @app.post("/api/collect")
 def collect(body: dict = Body(...)):

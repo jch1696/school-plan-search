@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import sys
 import time
@@ -114,6 +115,37 @@ def _normalize(items: list[dict]) -> list[dict]:
             "doc_no": d.get("DOC_NO"),
         })
     return rows
+
+
+SHORT_SCHOOL = {"초": "초등학교", "중": "중학교", "고": "고등학교"}
+
+
+def expand_keyword(keyword: str) -> str | None:
+    """'월항초' → '월항초등학교'. 포털은 줄임말과 정식 이름의 결과가 달라 둘 다 검색한다.
+    3글자 이상이고 초/중/고로 끝나는 단어만 늘린다. 엉뚱하게 늘어나도('결과보고등학교') 0건이라 해는 없다."""
+    words = keyword.split()
+    out = [w[:-1] + SHORT_SCHOOL[w[-1]] if len(w) >= 3 and w[-1] in SHORT_SCHOOL else w for w in words]
+    return " ".join(out) if out != words else None
+
+
+def level_of(school: str) -> str:
+    s = school or ""
+    if "유치원" in s:
+        return "유"
+    if "초등학교" in s:
+        return "초"
+    if "중학교" in s:
+        return "중"
+    if "고등학교" in s or "고교" in s:
+        return "고"
+    if "교육청" in s or "교육지원청" in s:
+        return "청"
+    return "기타"
+
+
+def region_of(org: str) -> str:
+    m = re.match(r"(\S+?교육청)", org or "")
+    return m.group(1).replace("특별자치도", "").replace("특별시", "").replace("광역시", "").replace("특별자치시", "") if m else "기타"
 
 
 def detail_form(row: dict) -> dict:

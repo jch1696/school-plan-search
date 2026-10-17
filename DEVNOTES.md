@@ -31,8 +31,9 @@
 | `collect.py` + `keywords.txt` | 검색어 일괄 수집(명령줄) |
 | `settings.json` | 저장 폴더(`download_dir`), 파일명 접두어(`prefix`) |
 | `*.bat` | 더블클릭 실행용. **cp949로 저장해야 함**(아래 함정 참고) |
-| `export_web.py` | `docs` 테이블 → `docs/data.json` (폰·웹용). `폰용 목록 올리기.bat`이 이것 + git push |
-| `docs/index.html` | GitHub Pages 페이지(폰용). `data.json`을 통째로 받아 브라우저에서 거름. 포털 상세는 POST 폼으로 새 탭 |
+| `export_web.py` | `docs/data.json`(폰·웹용) 관리. PC: DB↔data.json 합쳐 내보내기. Actions: `collect` 모드로 포털 검색→data.json 추가 |
+| `docs/index.html` | GitHub Pages 페이지(폰용). `data.json`을 통째로 받아 브라우저에서 거름. 포털 상세는 POST 폼으로 새 탭. "가져오기"는 GitHub API로 워크플로 실행 |
+| `.github/workflows/collect.yml` | `workflow_dispatch(keyword, days)` → `export_web.py collect` → data.json 커밋. `concurrency: collect`로 직렬화 |
 
 ### DB 테이블 (`opengo.db`)
 - `docs` : 목록 1건 = 문서 1건. PK `reg_no`(=PRDCTN_INSTT_REGIST_NO). `open_type`은 "공개"/"부분공개".
@@ -118,8 +119,12 @@
 9. (2026-10-17) 받은 파일 삭제(휴지통) + 탐색기에서 지운 파일 기록 정리(`/api/files/delete`, `/api/files/stale`, `/api/files/cleanup`).
    스캔 PDF OCR(4절).
 10. (2026-10-17) GitHub 공개 저장소 `jch1696/school-plan-search` + GitHub Pages(`docs/` 폴더).
-    **정적 페이지는 포털을 직접 검색 못 함**(CORS + 지문 세션) → PC DB를 내보낸 `data.json`(약 1.3MB)을 검색.
-    사용자 결정: 매일 자동 수집 안 함. PC에서 수집 후 bat으로 올림.
+    **정적 페이지는 포털을 직접 검색 못 함**(CORS + 지문 세션) → PC DB를 내보낸 `data.json`(약 1.5MB)을 검색.
+11. (2026-10-17) 폰에서 "가져오기": **GitHub Actions(해외 IP)에서 포털 접속 됨** 확인(졸업식 404건 3.6초).
+    폰 페이지 → GitHub API `workflow_dispatch`(폰 localStorage의 fine-grained 토큰, Actions: write) → 포털 검색 → data.json 커밋
+    → 페이지가 run 상태를 폴링하고 끝나면 `raw.githubusercontent.com`에서 새 data.json을 받음(Pages CDN 캐시 10분 회피).
+    목록이 두 곳(PC DB, data.json)에서 늘어나므로 `폰용 목록 올리기.bat`은 `git pull --rebase` → data.json의 새 문서를 DB에 넣기 → DB 전체 내보내기 → push.
+    공통 함수(`level_of`, `region_of`, `expand_keyword`)는 Actions에 fastapi가 없어서 `server.py`→`opengo.py`로 옮김.
 
 ## 7. 다음에 할 만한 것
 - [x] 스캔 PDF OCR (2026-10-17, Windows 내장 OCR)
@@ -129,7 +134,7 @@
 - [x] 목록 300건 제한 → 페이지 넘김 (2026-10-17)
 - [x] 포털 검색어 줄임말 확장 (2026-10-17)
 - [ ] DB(`opengo.db`)가 구글 드라이브 동기화 폴더 안에 있음. 여러 PC에서 동시에 쓰면 충돌 위험 → 필요하면 로컬로 옮기기
-- [x] GitHub Pages에 목록 공개(폰에서 제목 검색용). 다운로드는 PC 전용 유지. (2026-10-17, 자동 수집은 안 하기로)
+- [x] GitHub Pages에 목록 공개 + 폰에서 포털 가져오기 (2026-10-17). 다운로드는 PC 전용 유지. 매일 자동 수집은 안 하기로.
 - [ ] `data.json`이 커지면(수만 건) 연도별로 나누거나 gzip 고려
 
 ## 8. 빠른 점검 명령

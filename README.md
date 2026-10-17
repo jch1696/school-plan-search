@@ -19,11 +19,14 @@
 
 ## 폰·웹에서 쓰기
 
-https://jch1696.github.io/school-plan-search/ 에서 제목 검색과 정보공개포털 원문 보기가 됩니다.
+https://jch1696.github.io/school-plan-search/ 에서 제목 검색, 정보공개포털 원문 보기, 포털에서 새로 가져오기가 됩니다.
 파일 다운로드, 본문 검색, OCR은 PC 프로그램에서만 됩니다.
 
-웹 페이지의 목록은 PC의 `opengo.db`를 내보낸 것이라 **자동으로 갱신되지 않습니다.**
-PC에서 새로 수집한 뒤 **`폰용 목록 올리기.bat`** 을 더블클릭하면 목록을 내보내 GitHub에 올립니다(1~2분 뒤 반영).
+- **가져오기**: 검색어를 넣고 "목록에 없나요? 정보공개포털에서 가져오기"를 누르면 GitHub Actions가 포털을
+  검색해 목록에 추가합니다(1~2분). 처음 한 번 GitHub 토큰을 넣어야 하며, 만드는 법은 버튼을 누르면 나옵니다.
+  (Fine-grained token, 저장소 `school-plan-search`만, 권한 Actions: Read and write)
+- **PC와 합치기**: PC에서 **`폰용 목록 올리기.bat`** 을 더블클릭하면 폰에서 모은 문서를 PC DB에 넣고,
+  PC에서 수집한 문서를 웹 목록에 올립니다.
 
 GitHub에는 코드와 목록(`docs/data.json`)만 올라가고, 받은 파일·DB·`settings.json`은 올라가지 않습니다(`.gitignore`).
 
